@@ -50,7 +50,7 @@ pipeline {
     post {
         success {
             // Actions to perform if the pipeline succeeds
-            echo 'Pipeline completed successfully!'
+            echo 'Jai Shree Ram !!'
         }
         failure {
             // Actions to perform if the pipeline fails
