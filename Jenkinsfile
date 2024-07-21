@@ -5,7 +5,7 @@ pipeline {
         maven 'maven3' // Ensure 'maven3' is defined in your Jenkins tool configuration
     }
 
-    tages {
+    stages {
         stage('Checkout') {
             steps {
                 git 'https://github.com/aniket8979/deploySpringJenkins.git'
