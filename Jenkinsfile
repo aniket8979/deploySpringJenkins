@@ -21,9 +21,7 @@ pipeline {
         stage('Deploy') {
             steps {
                 script {
-                    def artifact = 'target/DeployApplication.jar' // Replace with your artifact path
-
-                    // Run the jar file locally
+                    def artifact = 'target/DeployApplication.jar'
                     sh "java -jar ${artifact}"
                 }
             }
