@@ -6,6 +6,7 @@ pipeline {
         GIT_BRANCH = 'main'
         APP_NAME = 'DeployApplication'
         JAR_NAME = "${APP_NAME}.jar"
+        APP_PORT = '5000'
     }
     
     stages {
