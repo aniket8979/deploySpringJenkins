@@ -1,56 +1,89 @@
 pipeline {
     agent any
-
+    
     environment {
-        // Define environment variables
         GIT_REPO = 'https://github.com/aniket8979/deploySpringJenkins.git'
-        GIT_BRANCH = 'main' // Change this if your branch is different
+        GIT_BRANCH = 'main'
+        APP_NAME = 'DeployApplication'
+        JAR_NAME = "${APP_NAME}.jar"
     }
-
+    
     stages {
         stage('Checkout') {
             steps {
-                // Checkout the source code from GitHub
                 git branch: "${GIT_BRANCH}", url: "${GIT_REPO}"
             }
         }
+        
         stage('Build') {
             steps {
-                // Build the project using Maven
                 sh 'mvn clean install'
             }
         }
-        // stage('Test') {
-        //     steps {
-        //         // Run unit tests
-        //         sh 'mvn test'
-        //     }
-        // }
+        
         stage('Package') {
             steps {
-                // Package the application
                 sh 'mvn package'
+                sh 'find . -name "*.jar" -type f' // Debug: List all JAR files
+                script {
+                    def jarFile = sh(script: "find target -name '*.jar' ! -name '*-sources.jar' ! -name '*-javadoc.jar' -type f | head -n 1", returnStdout: true).trim()
+                    if (jarFile) {
+                        sh "cp ${jarFile} ${JAR_NAME}"
+                        echo "JAR file copied to ${JAR_NAME}"
+                    } else {
+                        error "No JAR file found in target directory"
+                    }
+                }
             }
         }
+        
         stage('Deploy') {
             steps {
                 script {
-                    sh "cd target"
-                    def jarFile = sh(script: 'ls *.jar')
-                    sh "java -jar ${jarFile}"
+                    if (!fileExists(JAR_NAME)) {
+                        error "JAR file ${JAR_NAME} not found"
+                    }
+                    
+                    // Stop any running instance
+                    sh """
+                    pid=\$(ps aux | grep ${JAR_NAME} | grep -v grep | awk '{print \$2}')
+                    if [ ! -z "\$pid" ]; then
+                        echo "Stopping existing application instance (PID: \$pid)"
+                        kill \$pid
+                        sleep 10
+                    else
+                        echo "No existing instance found"
+                    fi
+                    """
+                    
+                    // Start the application
+                    echo "Starting application: ${JAR_NAME}"
+                    sh "nohup java -jar ${JAR_NAME} > app.log 2>&1 &"
+                    
+                    // Check if application started successfully
+                    sh """
+                    sleep 30
+                    if ps aux | grep ${JAR_NAME} | grep -v grep > /dev/null; then
+                        echo "Application started successfully"
+                    else
+                        echo "Application failed to start"
+                        exit 1
+                    fi
+                    """
                 }
             }
         }
     }
-
-    post {  // Correct indentation here
+    
+    post {
         success {
-            // Actions to perform if the pipeline succeeds
             echo 'Jai Shree Ram !!'
         }
         failure {
-            // Actions to perform if the pipeline fails
             echo 'Pipeline failed!'
+        }
+        always {
+            archiveArtifacts artifacts: "${JAR_NAME}, app.log", allowEmptyArchive: true
         }
     }
 }
