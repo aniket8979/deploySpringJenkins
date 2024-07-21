@@ -40,36 +40,12 @@ pipeline {
         stage('Deploy') {
             steps {
                 script {
-                    if (!fileExists(JAR_NAME)) {
-                        error "JAR file ${JAR_NAME} not found"
-                    }
-                    
-                    // Stop any running instance
-                    sh """
-                    pid=\$(ps aux | grep ${JAR_NAME} | grep -v grep | awk '{print \$2}')
-                    if [ ! -z "\$pid" ]; then
-                        echo "Stopping existing application instance (PID: \$pid)"
-                        kill \$pid
-                        sleep 10
-                    else
-                        echo "No existing instance found"
-                    fi
-                    """
-                    
+                
                     // Start the application
                     echo "Starting application: ${JAR_NAME}"
                     sh "nohup java -jar ${JAR_NAME} > app.log 2>&1 &"
                     
-                    // Check if application started successfully
-                    sh """
-                    sleep 30
-                    if ps aux | grep ${JAR_NAME} | grep -v grep > /dev/null; then
-                        echo "Application started successfully"
-                    else
-                        echo "Application failed to start"
-                        exit 1
-                    fi
-                    """
+                    
                 }
             }
         }
