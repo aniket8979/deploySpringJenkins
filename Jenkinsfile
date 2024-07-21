@@ -1,45 +1,32 @@
-Pipeline {
-    Agent any
+pipeline {
+    agent any
 
-    Tools {
-        Maven 'maven3'
+    tools {
+        maven 'maven3' // Ensure 'maven3' is defined in your Jenkins tool configuration
     }
 
-
-    Environment {
-        APP_NAME = "DummyDeployment_APP"
-        APP_ENV = "DEV"
-    }
-
-    Stages {
-        Stage('Cleanup Workspace') {
-            Steps {
-                CleanWs()
-                Sh 'echo "Cleaned Up Workspace for ${APP_NAME}"'
+    tages {
+        stage('Checkout') {
+            steps {
+                git 'https://github.com/aniket8979/deploySpringJenkins.git'
             }
         }
 
-        Stage('Code Checkout') {
-            Steps {
-                Checkout([
-                    $class: 'GitSCM',
-                    Branches: [[name: '*/main']],
-                    UserRemoteConfigs: [[url: 'https://github.com/aniket8979/deploySpringJenkins.git']]
-                ])
+        stage('Build') {
+            steps {
+                sh 'mvn clean install'
             }
         }
 
-        Stage('Code Build') {
-            Steps {
-                Sh 'mvn install -Dmaven.test.skip=true'
+        stage('Deploy') {
+            steps {
+                script {
+                    def artifact = 'target/DeployApplication.jar' // Replace with your artifact path
+
+                    // Run the jar file locally
+                    sh "java -jar ${artifact}"
+                }
             }
         }
-
-        Stage('Printing All Global Variables') {
-            Steps {
-                Sh 'env'
-            }
-        }
-
     }
 }
