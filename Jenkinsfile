@@ -1,66 +1,55 @@
 pipeline {
     agent any
 
-    // environment {
-    //     // Define environment variables (optional)
-    //     // For example:
-    //     // APP_NAME = 'my-spring-app'
-    // }
+    environment {
+        // Define environment variables
+        GIT_REPO = 'https://github.com/aniket8979/deploySpringJenkins.git'
+        GIT_BRANCH = 'main' // Change this if your branch is different
+    }
 
     stages {
         stage('Checkout') {
             steps {
-                // Checkout the source code from Git
-                git branch: 'main', // Change this if your branch is different
-                   url: 'https://github.com/aniket8979/deploySpringJenkins.git'
+                // Checkout the source code from GitHub
+                git branch: "${GIT_BRANCH}", url: "${GIT_REPO}"
             }
         }
-
         stage('Build') {
             steps {
                 // Build the project using Maven
                 sh 'mvn clean install'
             }
         }
-
-        // stage('Test') { // (Optional)
+        // stage('Test') {
         //     steps {
-        //         // Run unit tests (if applicable)
+        //         // Run unit tests
         //         sh 'mvn test'
         //     }
         // }
-
         stage('Package') {
             steps {
-                // Package the application (assuming JAR output)
+                // Package the application
                 sh 'mvn package'
             }
         }
-
         stage('Deploy') {
             steps {
                 script {
-                    // Find the generated JAR file
-                    def jarFile = sh(script: "ls target/*.jar", returnStdout: true).trim()
-
-                    // Start the application (assuming Spring Boot)
-                    sh "nohup java -jar ${jarFile} &" // Use "nohup" to run in background
-
-                    // Optional: Copy the JAR to a specific location on the server
-                    // sh "cp ${jarFile} /path/to/deployment/directory/"
+                    sh "cd target"
+                    def jarFile = sh(script: 'ls *.jar')
+                    sh "java -jar ${jarFile}"
                 }
             }
         }
     }
 
-    post {
+    post {  // Correct indentation here
         success {
-            // Actions to perform if the pipeline succeeds (optional)
-            echo 'Project built and deployed successfully!'
+            // Actions to perform if the pipeline succeeds
+            echo 'Jai Shree Ram !!'
         }
-
         failure {
-            // Actions to perform if the pipeline fails (optional)
+            // Actions to perform if the pipeline fails
             echo 'Pipeline failed!'
         }
     }
